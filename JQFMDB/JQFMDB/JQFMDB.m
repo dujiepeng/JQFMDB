@@ -15,6 +15,8 @@
 #define SQL_REAL     @"REAL" //浮点
 #define SQL_BLOB     @"BLOB" //data
 
+#define kPrimaryKey  @"pkid"
+
 @interface JQFMDB ()
 
 @property (nonatomic, strong)NSString *dbPath;
@@ -107,12 +109,19 @@ static JQFMDB *jqdb = nil;
 
 - (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters
 {
-    return [self jq_createTable:tableName dicOrModel:parameters excludeName:nil];
+    return [self jq_createTable:tableName dicOrModel:parameters withKey:nil];
+}
+
+- (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters withKey:(NSString *)aKey {
+    return [self jq_createTable:tableName dicOrModel:parameters withKey:aKey excludeName:nil];
 }
 
 - (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters excludeName:(NSArray *)nameArr
 {
-    
+    return [self jq_createTable:tableName dicOrModel:parameters withKey:nil excludeName:nil];
+}
+
+- (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters withKey:(NSString *)aKey excludeName:(NSArray *)nameArr {
     NSDictionary *dic;
     if ([parameters isKindOfClass:[NSDictionary class]]) {
         dic = parameters;
@@ -132,21 +141,32 @@ static JQFMDB *jqdb = nil;
         dic = [self modelToDictionary:CLS excludePropertyName:nameArr];
     }
     
-    NSMutableString *fieldStr = [[NSMutableString alloc] initWithFormat:@"CREATE TABLE %@ (pkid  INTEGER PRIMARY KEY,", tableName];
+    BOOL hasKey = NO;
+    NSString *primaryKey = kPrimaryKey;
+    NSString *primaryKeyType = SQL_INTEGER;
+    NSMutableDictionary *withoutPkidDic = dic.mutableCopy;
+    if (dic[aKey]) {
+        primaryKey = aKey;
+        primaryKeyType = dic[aKey];
+        withoutPkidDic[primaryKey] = nil;
+        hasKey = YES;
+    }
+    
+    NSMutableString *fieldStr = [[NSMutableString alloc] initWithFormat:@"CREATE TABLE %@ (%@ %@ PRIMARY KEY%@,", tableName, primaryKey, primaryKeyType, hasKey ? @"":@" AUTOINCREMENT"];
     
     int keyCount = 0;
-    for (NSString *key in dic) {
+    for (NSString *key in withoutPkidDic) {
         
         keyCount++;
-        if ((nameArr && [nameArr containsObject:key]) || [key isEqualToString:@"pkid"]) {
+        if ((nameArr && [nameArr containsObject:key]) || [key isEqualToString:primaryKey]) {
             continue;
         }
-        if (keyCount == dic.count) {
-            [fieldStr appendFormat:@" %@ %@)", key, dic[key]];
+        if (keyCount == withoutPkidDic.count) {
+            [fieldStr appendFormat:@" %@ %@)", key, withoutPkidDic[key]];
             break;
         }
         
-        [fieldStr appendFormat:@" %@ %@,", key, dic[key]];
+        [fieldStr appendFormat:@" %@ %@,", key, withoutPkidDic[key]];
     }
     
     BOOL creatFlag;
@@ -299,15 +319,13 @@ static JQFMDB *jqdb = nil;
     NSMutableString *finalStr = [[NSMutableString alloc] initWithFormat:@"INSERT INTO %@ (", tableName];
     NSMutableString *tempStr = [NSMutableString stringWithCapacity:0];
     NSMutableArray *argumentsArr = [NSMutableArray arrayWithCapacity:0];
-    
+
     for (NSString *key in dic) {
-        
-        if (![columnArr containsObject:key] || [key isEqualToString:@"pkid"]) {
+        if (![columnArr containsObject:key]) {
             continue;
         }
         [finalStr appendFormat:@"%@,", key];
         [tempStr appendString:@"?,"];
-        
         [argumentsArr addObject:dic[key]];
     }
     
@@ -353,10 +371,6 @@ static JQFMDB *jqdb = nil;
     NSMutableArray *argumentsArr = [NSMutableArray arrayWithCapacity:0];
     
     for (NSString *key in dic) {
-        
-        if (![clomnArr containsObject:key] || [key isEqualToString:@"pkid"]) {
-            continue;
-        }
         [finalStr appendFormat:@"%@ = %@,", key, @"?"];
         [argumentsArr addObject:dic[key]];
     }

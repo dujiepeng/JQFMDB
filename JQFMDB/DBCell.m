@@ -59,7 +59,7 @@ static NSMutableArray *mArr;
     self.age.text = [NSString stringWithFormat:@"%d", model.age];
     self.height.text = [NSString stringWithFormat:@"%.2f", model.height];
     self.weight.text = [NSString stringWithFormat:@"%.4f", model.weight];
-    self.pkid.text = [NSString stringWithFormat:@"%ld", (long)model.pkid];
+//    self.pkid.text = [NSString stringWithFormat:@"%ld", (long)model.pkid];
 }
 
 - (void)awakeFromNib {

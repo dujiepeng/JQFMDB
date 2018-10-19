@@ -334,13 +334,11 @@
         
         if (![db jq_isExistTable:@"user"]) {
             [_alertLabel removeFromSuperview];
-            [db jq_createTable:@"user" dicOrModel:[Person class]];
+            [db jq_createTable:@"user" dicOrModel:[Person class] withKey:@"name"];
             self.columnNameArr = [NSMutableArray arrayWithArray:[db jq_columnNameArray:@"user"]];
             [self creatTableView];
             self.sView.hidden = NO;
         }
-        
-        
     });
 }
 

@@ -44,12 +44,14 @@
  */
 - (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters;
 
+- (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters withKey:(NSString *)aKey;
+
 /**
  同上,
  @param nameArr 不允许model或dic里的属性/key生成表的字段,如:nameArr = @[@"name"],则不允许名为name的属性/key 生成表的字段
  
  */
-- (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters excludeName:(NSArray *)nameArr;
+- (BOOL)jq_createTable:(NSString *)tableName dicOrModel:(id)parameters withKey:(NSString *)aKey excludeName:(NSArray *)nameArr;
 
 /**
  增加: 向表中插入数据

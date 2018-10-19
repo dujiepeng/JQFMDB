@@ -72,6 +72,7 @@
 {
     [proViews insertMethod1:^{
         //插入一条数据
+        person.name = @"1114";
         [db jq_insertTable:@"user" dicOrModel:person];
         [proViews reloadData]; //刷新tableview
     }];
